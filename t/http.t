@@ -31,13 +31,25 @@ is mirror('foo', 'bar'), 200, 'mirror';
 is_deeply postform('foo', {foo => 'bar'}), {foo => 'bar'}, 'postform';
 is_deeply postjson('foo', [{foo => 'bar'}]), '[{"foo":"bar"}]', 'postjson';
 
-*HTTP::Simple::TestUA::post = sub { return {success => 1, status => 200, reason => 'OK', content => $_[2]{content}()} };
+*HTTP::Simple::TestUA::post = sub {
+  my $length = 0;
+  my $buf;
+  do { $buf = $_[2]{content}(); $length += length $buf } while defined $buf and length $buf;
+  return {success => 1, status => 200, reason => 'OK', content => $length};
+};
 
 {
-  open my $temph, '>', $path or die "open failed: $!";
+  open my $temph, '>:raw', $path or die "open failed: $!";
   print $temph "file contents\n";
 }
-is postfile('foo', $path), "file contents\n", 'postfile';
+is postfile('foo', $path), 14, 'postfile';
+
+my $str = "\0"x(1024*1024);
+{
+  open my $temph, '>:raw', $path or die "open failed: $!";
+  print $temph $str;
+}
+is postfile('foo', $path), 1024*1024, 'postfile with large buffer';
 
 *HTTP::Simple::TestUA::get = sub { $_[2]{data_callback}($_[1]); return {success => 1, status => 200, reason => 'OK'} };
 
