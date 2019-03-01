@@ -59,7 +59,7 @@ is $contents, 'foo', 'right contents';
 *HTTP::Simple::TestUA::get = sub { $_[2]{data_callback}($_[1]); return {success => 0, status => 400, reason => 'Bad Request'} };
 
 undef $buffer;
-seek $fakeout, 0, 0 or die "seek failed: $!";
+open $fakeout, '>', \$buffer or die "failed to open scalar buffer: $!";
 $stdout = select $fakeout;
 $code = getprint('foo');
 select $stdout;
