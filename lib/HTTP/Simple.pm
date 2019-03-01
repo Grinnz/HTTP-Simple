@@ -11,8 +11,14 @@ use JSON::PP;
 
 our $VERSION = '0.001';
 
-our @EXPORT = qw(get head getprint getstore mirror postform postjson postfile
-  is_info is_success is_redirect is_error is_client_error is_server_error);
+my @request_functions = qw(get getjson head getprint getstore mirror postform postjson postfile);
+my @status_functions = qw(is_info is_success is_redirect is_error is_client_error is_server_error);
+our @EXPORT = (@request_functions, @status_functions);
+our %EXPORT_TAGS = (
+  all => [@request_functions, @status_functions],
+  request => \@request_functions,
+  status => \@status_functions,
+);
 
 our $UA = HTTP::Tiny->new(agent => "HTTP::Simple/$VERSION");
 our $JSON = JSON::PP->new->utf8->canonical->allow_nonref->convert_blessed;
@@ -21,6 +27,14 @@ sub get {
   my ($url) = @_;
   my $res = $UA->get($url);
   return $res->{content} if $res->{success};
+  croak $res->{content} if $res->{status} == 599;
+  croak "$res->{status} $res->{reason}";
+}
+
+sub getjson {
+  my ($url) = @_;
+  my $res = $UA->get($url);
+  return $JSON->decode($res->{content}) if $res->{success};
   croak $res->{content} if $res->{status} == 599;
   croak "$res->{status} $res->{reason}";
 }
@@ -82,7 +96,8 @@ sub postfile {
   open my $fh, '<:raw', $file or croak "Failed to open $file: $!";
   my %options;
   $options{headers} = {'Content-Type' => $content_type} if defined $content_type;
-  $options{content} = sub { my $buffer; sysread $fh, $buffer, 131072; $buffer };
+  my $chunk = 131072;
+  $options{content} = sub { my $buffer; sysread $fh, $buffer, $chunk; $buffer };
   my $res = $UA->post($url, \%options);
   return $res->{content} if $res->{success};
   croak $res->{content} if $res->{status} == 599;
@@ -124,25 +139,41 @@ HTTP::Simple - Simple procedural interface to HTTP::Tiny
 
 This module is a wrapper of L<HTTP::Tiny> that provides simplified functions
 for performing HTTP requests in a similar manner to L<LWP::Simple>, but with
-slightly more useful error handling. For full control of the request process,
-use L<HTTP::Tiny> directly.
+slightly more useful error handling. For full control of the request process
+and response handling, use L<HTTP::Tiny> directly.
 
-Note that L<IO::Socket::SSL> is required for HTTPS requests with L<HTTP::Tiny>.
+L<IO::Socket::SSL> is required for HTTPS requests with L<HTTP::Tiny>.
+
+Request methods that return the body content of the response will return a byte
+string suitable for directly printing, but that may need to be
+L<decoded|Encode/decode> for text operations.
 
 The L<HTTP::Tiny> object used by these functions to make requests can be
 accessed as C<$HTTP::Simple::UA> (for example, to configure the timeout, or
 replace it with a compatible object like L<HTTP::Tinyish>).
 
+The JSON encoder used by the JSON functions defaults to a L<JSON::PP> instance,
+and can be accessed as C<$HTTP::Simple::JSON>.
+
 =head1 FUNCTIONS
 
-All functions are exported by default.
+All functions are exported by default. Functions can also be requested
+individually or with the tags C<:request>, C<:status>, or C<:all>.
 
 =head2 get
 
   my $contents = get($url);
 
 Retrieves the document at the given URL with a GET request and returns it as a
-string. Throws an exception on connection or HTTP errors.
+byte string. Throws an exception on connection or HTTP errors.
+
+=head2 getjson
+
+  my $data = getjson($url);
+
+Retrieves the JSON document at the given URL with a GET request and decodes it
+from JSON to a Perl structure. Throws an exception on connection or HTTP
+errors.
 
 =head2 head
 
@@ -185,18 +216,16 @@ connection or filesystem errors.
 
 Sends a POST request to the given URL with the given hash or array reference of
 form data serialized to C<application/x-www-form-urlencoded>. Returns the
-response body as a string. Throws an exception on connection or HTTP errors.
+response body as a byte string. Throws an exception on connection or HTTP
+errors.
 
 =head2 postjson
 
   my $contents = postjson($url, $data);
 
 Sends a POST request to the given URL with the given data structure encoded to
-JSON. Returns the response body as a string. Throws an exception on connection
-or HTTP errors.
-
-The JSON encoder defaults to a L<JSON::PP> instance, and can be accessed as
-C<$HTTP::Simple::JSON>.
+JSON. Returns the response body as a byte string. Throws an exception on
+connection or HTTP errors.
 
 =head2 postfile
 
@@ -205,7 +234,7 @@ C<$HTTP::Simple::JSON>.
 
 Sends a POST request to the given URL, streaming the contents of the given
 file. The content type is passed as C<application/octet-stream> if not
-specified. Returns the response body as a string. Throws an exception on
+specified. Returns the response body as a byte string. Throws an exception on
 connection or HTTP errors.
 
 =head2 is_info
