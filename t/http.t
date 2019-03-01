@@ -51,6 +51,13 @@ my $str = "\0"x(1024*1024);
 }
 is postfile('foo', $path), 1024*1024, 'postfile with large buffer';
 
+$str = "\xE2\x98\x83";
+{
+  open my $temph, '>:raw', $path or die "open failed: $!";
+  print $temph $str;
+}
+is postfile('foo', $path), 3, 'postfile with encoded text';
+
 *HTTP::Simple::TestUA::get = sub { $_[2]{data_callback}($_[1]); return {success => 1, status => 200, reason => 'OK'} };
 
 open my $fakeout, '>', \my $buffer or die "failed to open scalar buffer: $!";
