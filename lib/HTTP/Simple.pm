@@ -59,7 +59,7 @@ sub getstore {
   my $temp = File::Temp->new(DIR => dirname $file);
   my $res = $UA->get($url, {data_callback => sub { print {$temp} $_[0] }});
   croak $res->{content} if $res->{status} == 599;
-  close $temp->filename or croak "Failed to close $temp: $!";
+  close $temp or croak "Failed to close $temp: $!";
   rename $temp->filename, $file or croak "Failed to rename $temp to $file: $!";
   $temp->unlink_on_destroy(0);
   return $res->{status};
@@ -68,8 +68,9 @@ sub getstore {
 sub mirror {
   my ($url, $file) = @_;
   my $res = $UA->mirror($url, $file);
+  return $res->{status} if $res->{success};
   croak $res->{content} if $res->{status} == 599;
-  return $res->{status};
+  croak "$res->{status} $res->{reason}";
 }
 
 sub postform {
@@ -172,7 +173,7 @@ byte string. Throws an exception on connection or HTTP errors.
   my $data = getjson($url);
 
 Retrieves the JSON document at the given URL with a GET request and decodes it
-from JSON to a Perl structure. Throws an exception on connection or HTTP
+from JSON to a Perl structure. Throws an exception on connection, HTTP, or JSON
 errors.
 
 =head2 head
@@ -208,7 +209,7 @@ Retrieves the document at the given URL with a GET request and mirrors it to
 the given file path, using the C<If-Modified-Since> headers to short-circuit if
 the file exists and is new enough, and the C<Last-Modified> header to set its
 modification time. Returns the HTTP status code. Throws an exception on
-connection or filesystem errors.
+connection, HTTP, or filesystem errors.
 
 =head2 postform
 
@@ -225,7 +226,7 @@ errors.
 
 Sends a POST request to the given URL with the given data structure encoded to
 JSON. Returns the response body as a byte string. Throws an exception on
-connection or HTTP errors.
+connection, HTTP, or JSON errors.
 
 =head2 postfile
 
@@ -235,7 +236,7 @@ connection or HTTP errors.
 Sends a POST request to the given URL, streaming the contents of the given
 file. The content type is passed as C<application/octet-stream> if not
 specified. Returns the response body as a byte string. Throws an exception on
-connection or HTTP errors.
+connection, HTTP, or filesystem errors.
 
 =head2 is_info
 
