@@ -9,7 +9,7 @@ use File::Temp;
 use HTTP::Tiny;
 use JSON::PP;
 
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 
 my @request_functions = qw(get getjson head getprint getstore mirror postform postjson postfile);
 my @status_functions = qw(is_info is_success is_redirect is_error is_client_error is_server_error);
