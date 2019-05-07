@@ -1,4 +1,6 @@
 {{$NEXT}}
+  - If $HTTP::Simple::JSON is set to a module name, use decode_json and
+    encode_json from that module
 
 0.002     2019-03-01 14:46:46 EST
   - Fix postfile test to avoid default PerlIO layers
