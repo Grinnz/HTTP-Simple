@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.003     2019-05-07 19:22:58 EDT
   - If $HTTP::Simple::JSON is set to a module name, use decode_json and
     encode_json from that module
 
