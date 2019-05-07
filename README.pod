@@ -40,7 +40,10 @@ accessed as C<$HTTP::Simple::UA> (for example, to configure the timeout, or
 replace it with a compatible object like L<HTTP::Tinyish>).
 
 The JSON encoder used by the JSON functions defaults to a L<JSON::PP> instance,
-and can be accessed as C<$HTTP::Simple::JSON>.
+and can be accessed as C<$HTTP::Simple::JSON>. If replaced with a new object,
+it should have UTF-8 encoding/decoding enabled (usually the C<utf8> option). If
+it is set to a string, it will be used as a module name that is expected to
+have C<decode_json> and C<encode_json> functions.
 
 =head1 FUNCTIONS
 
