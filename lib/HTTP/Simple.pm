@@ -118,7 +118,9 @@ sub _load_function {
   return $code if defined $code;
   (my $path = $module) =~ s{::}{/}g;
   require "$path.pm";
-  return $module->can($function);
+  $code = $module->can($function);
+  croak "'$function' not found in package $module" unless defined $code;
+  return $code;
 }
 
 1;
