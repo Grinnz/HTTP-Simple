@@ -61,7 +61,7 @@
    "provides" : {
       "HTTP::Simple" : {
          "file" : "lib/HTTP/Simple.pm",
-         "version" : "0.003"
+         "version" : "0.004"
       }
    },
    "release_status" : "stable",
@@ -76,7 +76,7 @@
          "web" : "https://github.com/Grinnz/HTTP-Simple"
       }
    },
-   "version" : "0.003",
+   "version" : "0.004",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.028002"
@@ -265,7 +265,7 @@
                   "branch" : null,
                   "changelog" : "Changes",
                   "signed" : 0,
-                  "tag" : "0.003",
+                  "tag" : "0.004",
                   "tag_format" : "%v",
                   "tag_message" : "%v"
                },
