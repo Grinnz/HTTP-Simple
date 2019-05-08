@@ -1,4 +1,5 @@
 {{$NEXT}}
+  - Optionally use Cpanel::JSON::XS 4.11+ by default
 
 0.003     2019-05-07 19:22:58 EDT
   - If $HTTP::Simple::JSON is set to a module name, use decode_json and

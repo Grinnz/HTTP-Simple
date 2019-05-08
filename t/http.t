@@ -11,7 +11,6 @@ use Test::More;
 use HTTP::Simple;
 use File::Spec;
 use File::Temp;
-use JSON::PP;
 
 my $dir = File::Temp->newdir;
 my $path = File::Spec->catfile($dir, 'test');
